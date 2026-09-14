@@ -29,24 +29,40 @@ func New(
 		),
 	)
 
-	mux.HandleFunc(
+	mux.Handle(
 		"GET /api/v1/organization-types",
-		organizationTypeHandler.GetAll,
+		authMiddleware.RequireAuth(
+			rbacMiddleware.RequirePermission("organization_type.read")(
+				http.HandlerFunc(organizationTypeHandler.GetAll),
+			),
+		),
 	)
 
-	mux.HandleFunc(
+	mux.Handle(
 		"GET /api/v1/organizations",
-		organizationHandler.GetAll,
+		authMiddleware.RequireAuth(
+			rbacMiddleware.RequirePermission("organization.read")(
+				http.HandlerFunc(organizationHandler.GetAll),
+			),
+		),
 	)
 
-	mux.HandleFunc(
+	mux.Handle(
 		"GET /api/v1/organizations/{id}",
-		organizationHandler.GetByID,
+		authMiddleware.RequireAuth(
+			rbacMiddleware.RequirePermission("organization.read")(
+				http.HandlerFunc(organizationHandler.GetByID),
+			),
+		),
 	)
 
-	mux.HandleFunc(
+	mux.Handle(
 		"GET /api/v1/organizations/{organization_id}/periods",
-		organizationPeriodHandler.GetByOrganizationID,
+		authMiddleware.RequireAuth(
+			rbacMiddleware.RequirePermission("organization_period.read")(
+				http.HandlerFunc(organizationPeriodHandler.GetByOrganizationID),
+			),
+		),
 	)
 
 	return mux
