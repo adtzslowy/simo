@@ -48,7 +48,7 @@ func New(
 	)
 
 	mux.Handle(
-		"POST /api/v1/organization-types/{id}",
+		"PUT /api/v1/organization-types/{id}",
 		authMiddleware.RequireAuth(
 			rbacMiddleware.RequirePermission("organization_type.update")(
 				http.HandlerFunc(organizationTypeHandler.Update),
@@ -57,7 +57,7 @@ func New(
 	)
 
 	mux.Handle(
-		"POST /api/v1/organization-types/{id}/delete",
+		"DELETE /api/v1/organization-types/{id}/delete",
 		authMiddleware.RequireAuth(
 			rbacMiddleware.RequirePermission("organization_type.delete")(
 				http.HandlerFunc(organizationTypeHandler.Delete),
