@@ -3,7 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/adtzslowy/simo/internal/auth"
 	"github.com/adtzslowy/simo/internal/config"
 	"github.com/adtzslowy/simo/internal/database"
 	"github.com/adtzslowy/simo/internal/handler"
@@ -31,6 +34,12 @@ func main() {
 	organizationTypeRepository := repository.NewOrganizationTypeRepository(db)
 	organizationRepository := repository.NewOrganizationRepository(db)
 	organizationPeriodRepository := repository.NewOrganizationPeriodRepository(db)
+	userRepository := repository.NewUserRepository(db)
+
+	jwtService := auth.NewJWTService(
+		os.Getenv("JWT_SECRET"),
+		24*time.Hour,
+	)
 
 	// Service
 	organizationTypeService := service.NewOrganizationTypeService(
@@ -40,6 +49,9 @@ func main() {
 		organizationRepository,
 	)
 	organizationPeriodService := service.NewOrganizationPeriodService(organizationPeriodRepository)
+	authService := service.NewAuthService(
+		userRepository, jwtService,
+	)
 
 	// Handler
 	organizationTypeHandler := handler.NewOrganizationTypeHandler(
@@ -49,12 +61,14 @@ func main() {
 		organizationService,
 	)
 	organizationPeriodHandler := handler.NewOrganizationPeriodHandler(organizationPeriodService)
+	authHandler := handler.NewAuthHandler(authService)
 
 	// Router
 	r := router.New(
 		organizationTypeHandler,
 		organizationHandler,
 		organizationPeriodHandler,
+		authHandler,
 	)
 
 	server := &http.Server{

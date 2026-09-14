@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/adtzslowy/simo/internal/model"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,41 +17,33 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	}
 }
 
-func (r *UserRepository) GetAll(ctx context.Context, id uuid.UUID) ([]model.User, error) {
-	rows, err := r.db.Query(ctx, `
-		SELECT id, name, email FROM users ORDER BY created_at DESC
-	`, id)
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
+	var user model.User
+
+	err := r.db.QueryRow(ctx, `
+		SELECT
+			id,
+			name,
+			email,
+			password_hash,
+			is_active,
+			created_at,
+			updated_at
+		FROM users
+		WHERE email = $1
+	`, email).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.PasswordHash,
+		&user.IsActive,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	users := make([]model.User, 0)
-
-	for rows.Next() {
-		var user model.User
-
-		err := rows.Scan(
-			&user.ID,
-			&user.Name,
-			&user.Email,
-			&user.PasswordHash,
-			&user.AvatarURL,
-			&user.IsActive,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		users = append(users, user)
-
-		if err := rows.Err(); err != nil {
-			return nil, err
-		}
-	}
-
-	return users, nil
+	return &user, nil
 }
