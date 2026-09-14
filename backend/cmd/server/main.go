@@ -17,7 +17,15 @@ import (
 )
 
 func main() {
+	// =========================================================
+	// CONFIG
+	// =========================================================
+
 	cfg := config.Load()
+
+	// =========================================================
+	// DATABASE
+	// =========================================================
 
 	db, err := database.NewPostgresPool(database.Config{
 		Host:     cfg.DBHost,
@@ -29,53 +37,116 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer db.Close()
 
-	// Repository
-	organizationTypeRepository := repository.NewOrganizationTypeRepository(db)
-	organizationRepository := repository.NewOrganizationRepository(db)
-	organizationPeriodRepository := repository.NewOrganizationPeriodRepository(db)
-	userRepository := repository.NewUserRepository(db)
+	// =========================================================
+	// REPOSITORY
+	// =========================================================
+
+	organizationTypeRepository :=
+		repository.NewOrganizationTypeRepository(db)
+
+	organizationRepository :=
+		repository.NewOrganizationRepository(db)
+
+	organizationPeriodRepository :=
+		repository.NewOrganizationPeriodRepository(db)
+
+	userRepository :=
+		repository.NewUserRepository(db)
+
+	rbacRepository :=
+		repository.NewRBACRepository(db)
+
+	// =========================================================
+	// AUTH
+	// =========================================================
 
 	jwtService := auth.NewJWTService(
 		os.Getenv("JWT_SECRET"),
 		24*time.Hour,
 	)
 
-	authMiddelware := middleware.NewAuthMiddleware(
-		jwtService,
-	)
+	// =========================================================
+	// SERVICE
+	// =========================================================
 
-	// Service
-	organizationTypeService := service.NewOrganizationTypeService(
-		organizationTypeRepository,
-	)
-	organizationService := service.NewOrganizationService(
-		organizationRepository,
-	)
-	organizationPeriodService := service.NewOrganizationPeriodService(organizationPeriodRepository)
-	authService := service.NewAuthService(
-		userRepository, jwtService,
-	)
+	organizationTypeService :=
+		service.NewOrganizationTypeService(
+			organizationTypeRepository,
+		)
 
-	// Handler
-	organizationTypeHandler := handler.NewOrganizationTypeHandler(
-		organizationTypeService,
-	)
-	organizationHandler := handler.NewOrganizationHandler(
-		organizationService,
-	)
-	organizationPeriodHandler := handler.NewOrganizationPeriodHandler(organizationPeriodService)
-	authHandler := handler.NewAuthHandler(authService)
+	organizationService :=
+		service.NewOrganizationService(
+			organizationRepository,
+		)
 
-	// Router
+	organizationPeriodService :=
+		service.NewOrganizationPeriodService(
+			organizationPeriodRepository,
+		)
+
+	authService :=
+		service.NewAuthService(
+			userRepository,
+			jwtService,
+		)
+
+	// =========================================================
+	// HANDLER
+	// =========================================================
+
+	organizationTypeHandler :=
+		handler.NewOrganizationTypeHandler(
+			organizationTypeService,
+		)
+
+	organizationHandler :=
+		handler.NewOrganizationHandler(
+			organizationService,
+		)
+
+	organizationPeriodHandler :=
+		handler.NewOrganizationPeriodHandler(
+			organizationPeriodService,
+		)
+
+	authHandler :=
+		handler.NewAuthHandler(
+			authService,
+		)
+
+	// =========================================================
+	// MIDDLEWARE
+	// =========================================================
+
+	authMiddleware :=
+		middleware.NewAuthMiddleware(
+			jwtService,
+		)
+
+	rbacMiddleware :=
+		middleware.NewRBACMiddleware(
+			rbacRepository,
+		)
+
+	// =========================================================
+	// ROUTER
+	// =========================================================
+
 	r := router.New(
 		organizationTypeHandler,
 		organizationHandler,
 		organizationPeriodHandler,
 		authHandler,
-		authMiddelware,
+		authMiddleware,
+		rbacMiddleware,
 	)
+
+	// =========================================================
+	// SERVER
+	// =========================================================
 
 	server := &http.Server{
 		Addr:    ":" + cfg.ServerPort,

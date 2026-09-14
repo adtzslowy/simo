@@ -13,6 +13,7 @@ func New(
 	organizationPeriodHandler *handler.OrganizationPeriodHandler,
 	authHandler *handler.AuthHandler,
 	authMiddleware *middleware.AuthMiddleware,
+	rbacMiddleware *middleware.RBACMiddleware,
 ) http.Handler {
 	mux := http.NewServeMux()
 
