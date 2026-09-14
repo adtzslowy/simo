@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	appcontext "github.com/adtzslowy/simo/internal/context"
 	"github.com/adtzslowy/simo/internal/dto"
 	"github.com/adtzslowy/simo/internal/response"
 	"github.com/adtzslowy/simo/internal/service"
@@ -60,5 +61,44 @@ func (h *AuthHandler) Login(
 			TokenType:   "Bearer",
 			ExpiresIn:   86400,
 		},
+	)
+}
+
+func (h *AuthHandler) Me(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	userID, ok := appcontext.GetUserID(r.Context())
+
+	if !ok {
+		response.Error(
+			w,
+			http.StatusUnauthorized,
+			"unauthorized",
+			nil,
+		)
+		return
+	}
+
+	user, err := h.service.Me(
+		r.Context(),
+		userID,
+	)
+
+	if err != nil {
+		response.Error(
+			w,
+			http.StatusNotFound,
+			"user not found",
+			nil,
+		)
+		return
+	}
+
+	response.Success(
+		w,
+		http.StatusOK,
+		"user retrieved successfully",
+		user,
 	)
 }

@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/adtzslowy/simo/internal/auth"
+	"github.com/adtzslowy/simo/internal/model"
 	"github.com/adtzslowy/simo/internal/repository"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -28,6 +30,13 @@ func NewAuthService(
 		userRepository: userRepository,
 		jwtService:     jwtService,
 	}
+}
+
+func (s *AuthService) Me(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*model.User, error) {
+	return s.userRepository.FindByID(ctx, userID)
 }
 
 func (s *AuthService) Login(

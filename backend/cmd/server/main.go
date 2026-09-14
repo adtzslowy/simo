@@ -10,6 +10,7 @@ import (
 	"github.com/adtzslowy/simo/internal/config"
 	"github.com/adtzslowy/simo/internal/database"
 	"github.com/adtzslowy/simo/internal/handler"
+	"github.com/adtzslowy/simo/internal/middleware"
 	"github.com/adtzslowy/simo/internal/repository"
 	"github.com/adtzslowy/simo/internal/router"
 	"github.com/adtzslowy/simo/internal/service"
@@ -41,6 +42,10 @@ func main() {
 		24*time.Hour,
 	)
 
+	authMiddelware := middleware.NewAuthMiddleware(
+		jwtService,
+	)
+
 	// Service
 	organizationTypeService := service.NewOrganizationTypeService(
 		organizationTypeRepository,
@@ -69,6 +74,7 @@ func main() {
 		organizationHandler,
 		organizationPeriodHandler,
 		authHandler,
+		authMiddelware,
 	)
 
 	server := &http.Server{
