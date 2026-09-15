@@ -10,19 +10,19 @@ import (
 	"github.com/google/uuid"
 )
 
-type OrganizationPeriodHandler struct {
-	service *service.OrganizationPeriodService
+type DepartmentHandler struct {
+	service *service.DepartmentService
 }
 
-func NewOrganizationPeriodHandler(
-	service *service.OrganizationPeriodService,
-) *OrganizationPeriodHandler {
-	return &OrganizationPeriodHandler{
+func NewDepartmentHandler(
+	service *service.DepartmentService,
+) *DepartmentHandler {
+	return &DepartmentHandler{
 		service: service,
 	}
 }
 
-func (h *OrganizationPeriodHandler) GetByOrganizationID(
+func (h *DepartmentHandler) GetAllByOrganizationID(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -31,28 +31,37 @@ func (h *OrganizationPeriodHandler) GetByOrganizationID(
 	)
 	if err != nil {
 		response.Error(
-			w, http.StatusBadRequest, "invalid organization id", nil,
+			w,
+			http.StatusBadRequest,
+			"invalid organization id",
+			nil,
 		)
 		return
 	}
 
-	periods, err := h.service.GetByOrganizationID(
+	departments, err := h.service.GetAllByOrganizationID(
 		r.Context(),
 		organizationID,
 	)
 	if err != nil {
 		response.Error(
-			w, http.StatusBadRequest, "failed to get organization periods", nil,
+			w,
+			http.StatusInternalServerError,
+			"failed to get departments",
+			nil,
 		)
 		return
 	}
 
 	response.Success(
-		w, http.StatusOK, "organization periods retrieved successfully", periods,
+		w,
+		http.StatusOK,
+		"departments retrieved successfully",
+		departments,
 	)
 }
 
-func (h *OrganizationPeriodHandler) GetByID(
+func (h *DepartmentHandler) GetByID(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -76,13 +85,13 @@ func (h *OrganizationPeriodHandler) GetByID(
 		response.Error(
 			w,
 			http.StatusBadRequest,
-			"invalid period id",
+			"invalid department id",
 			nil,
 		)
 		return
 	}
 
-	period, err := h.service.GetByID(
+	department, err := h.service.GetByID(
 		r.Context(),
 		organizationID,
 		id,
@@ -91,7 +100,7 @@ func (h *OrganizationPeriodHandler) GetByID(
 		response.Error(
 			w,
 			http.StatusNotFound,
-			"organization period not found",
+			"department not found",
 			nil,
 		)
 		return
@@ -100,12 +109,12 @@ func (h *OrganizationPeriodHandler) GetByID(
 	response.Success(
 		w,
 		http.StatusOK,
-		"organization period retrieved successfully",
-		period,
+		"department retrieved successfully",
+		department,
 	)
 }
 
-func (h *OrganizationPeriodHandler) Create(
+func (h *DepartmentHandler) Create(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -122,7 +131,7 @@ func (h *OrganizationPeriodHandler) Create(
 		return
 	}
 
-	var req model.CreateOrganizationPeriodRequest
+	var req model.CreateDepartmentRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(
@@ -134,7 +143,7 @@ func (h *OrganizationPeriodHandler) Create(
 		return
 	}
 
-	period, err := h.service.Create(
+	department, err := h.service.Create(
 		r.Context(),
 		organizationID,
 		req,
@@ -143,7 +152,7 @@ func (h *OrganizationPeriodHandler) Create(
 		response.Error(
 			w,
 			http.StatusInternalServerError,
-			"failed to create organization period",
+			"failed to create department",
 			nil,
 		)
 		return
@@ -152,12 +161,12 @@ func (h *OrganizationPeriodHandler) Create(
 	response.Success(
 		w,
 		http.StatusCreated,
-		"organization period created successfully",
-		period,
+		"department created successfully",
+		department,
 	)
 }
 
-func (h *OrganizationPeriodHandler) Update(
+func (h *DepartmentHandler) Update(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -181,13 +190,13 @@ func (h *OrganizationPeriodHandler) Update(
 		response.Error(
 			w,
 			http.StatusBadRequest,
-			"invalid period id",
+			"invalid department id",
 			nil,
 		)
 		return
 	}
 
-	var req model.UpdateOrganizationPeriodRequest
+	var req model.UpdateDepartmentRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(
@@ -199,7 +208,7 @@ func (h *OrganizationPeriodHandler) Update(
 		return
 	}
 
-	period, err := h.service.Update(
+	department, err := h.service.Update(
 		r.Context(),
 		organizationID,
 		id,
@@ -209,7 +218,7 @@ func (h *OrganizationPeriodHandler) Update(
 		response.Error(
 			w,
 			http.StatusInternalServerError,
-			"failed to update organization period",
+			"failed to update department",
 			nil,
 		)
 		return
@@ -218,12 +227,12 @@ func (h *OrganizationPeriodHandler) Update(
 	response.Success(
 		w,
 		http.StatusOK,
-		"organization period updated successfully",
-		period,
+		"department updated successfully",
+		department,
 	)
 }
 
-func (h *OrganizationPeriodHandler) Delete(
+func (h *DepartmentHandler) Delete(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -247,7 +256,7 @@ func (h *OrganizationPeriodHandler) Delete(
 		response.Error(
 			w,
 			http.StatusBadRequest,
-			"invalid period id",
+			"invalid department id",
 			nil,
 		)
 		return
@@ -261,7 +270,7 @@ func (h *OrganizationPeriodHandler) Delete(
 		response.Error(
 			w,
 			http.StatusInternalServerError,
-			"failed to delete organization period",
+			"failed to delete department",
 			nil,
 		)
 		return
@@ -270,7 +279,7 @@ func (h *OrganizationPeriodHandler) Delete(
 	response.Success(
 		w,
 		http.StatusOK,
-		"organization period deleted successfully",
+		"department deleted successfully",
 		nil,
 	)
 }

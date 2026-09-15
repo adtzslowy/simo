@@ -67,3 +67,137 @@ func (r *OrganizationPeriodRepository) FindByOrganizationID(ctx context.Context,
 
 	return periods, nil
 }
+
+func (r *OrganizationPeriodRepository) FindByID(
+	ctx context.Context,
+	organizationID uuid.UUID,
+	id uuid.UUID,
+) (*model.OrganizationPeriod, error) {
+	var period model.OrganizationPeriod
+
+	err := r.db.QueryRow(ctx, `
+		SELECT
+			id,
+			organization_id,
+			name,
+			start_date,
+			end_date,
+			is_active,
+			created_at,
+			updated_at
+		FROM organization_periods
+		WHERE id = $1
+		  AND organization_id = $2
+	`, id, organizationID).Scan(
+		&period.ID,
+		&period.OrganizationID,
+		&period.Name,
+		&period.StartDate,
+		&period.EndDate,
+		&period.IsActive,
+		&period.CreatedAt,
+		&period.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &period, nil
+}
+
+func (r *OrganizationPeriodRepository) Create(
+	ctx context.Context,
+	period *model.OrganizationPeriod,
+) error {
+	return r.db.QueryRow(ctx, `
+		INSERT INTO organization_periods (
+			organization_id,
+			name,
+			start_date,
+			end_date,
+			is_active
+		)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING
+			id,
+			organization_id,
+			name,
+			start_date,
+			end_date,
+			is_active,
+			created_at,
+			updated_at
+	`,
+		period.OrganizationID,
+		period.Name,
+		period.StartDate,
+		period.EndDate,
+		period.IsActive,
+	).Scan(
+		&period.ID,
+		&period.OrganizationID,
+		&period.Name,
+		&period.StartDate,
+		&period.EndDate,
+		&period.IsActive,
+		&period.CreatedAt,
+		&period.UpdatedAt,
+	)
+}
+
+func (r *OrganizationPeriodRepository) Update(
+	ctx context.Context,
+	period *model.OrganizationPeriod,
+) error {
+	return r.db.QueryRow(ctx, `
+		UPDATE organization_periods
+		SET
+			name = $1,
+			start_date = $2,
+			end_date = $3,
+			is_active = $4,
+			updated_at = NOW()
+		WHERE id = $5
+		  AND organization_id = $6
+		RETURNING
+			id,
+			organization_id,
+			name,
+			start_date,
+			end_date,
+			is_active,
+			created_at,
+			updated_at
+	`,
+		period.Name,
+		period.StartDate,
+		period.EndDate,
+		period.IsActive,
+		period.ID,
+		period.OrganizationID,
+	).Scan(
+		&period.ID,
+		&period.OrganizationID,
+		&period.Name,
+		&period.StartDate,
+		&period.EndDate,
+		&period.IsActive,
+		&period.CreatedAt,
+		&period.UpdatedAt,
+	)
+}
+
+func (r *OrganizationPeriodRepository) Delete(
+	ctx context.Context,
+	organizationID uuid.UUID,
+	id uuid.UUID,
+) error {
+	_, err := r.db.Exec(ctx, `
+		DELETE FROM organization_periods
+		WHERE id = $1
+		  AND organization_id = $2
+	`, id, organizationID)
+
+	return err
+}

@@ -59,6 +59,8 @@ func main() {
 	rbacRepository :=
 		repository.NewRBACRepository(db)
 
+	departmentRepository := repository.NewDepartmentRepository(db)
+
 	// =========================================================
 	// AUTH
 	// =========================================================
@@ -93,6 +95,8 @@ func main() {
 			jwtService,
 		)
 
+	departmentService := service.NewDepartmentService(departmentRepository)
+
 	// =========================================================
 	// HANDLER
 	// =========================================================
@@ -116,6 +120,8 @@ func main() {
 		handler.NewAuthHandler(
 			authService,
 		)
+
+	departmentHandler := handler.NewDepartmentHandler(departmentService)
 
 	// =========================================================
 	// MIDDLEWARE
@@ -142,6 +148,7 @@ func main() {
 		authHandler,
 		authMiddleware,
 		rbacMiddleware,
+		departmentHandler,
 	)
 
 	// =========================================================
