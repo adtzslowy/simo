@@ -37,29 +37,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer db.Close()
 
 	// =========================================================
 	// REPOSITORY
 	// =========================================================
 
-	organizationTypeRepository :=
-		repository.NewOrganizationTypeRepository(db)
+	organizationTypeRepository := repository.NewOrganizationTypeRepository(db)
 
-	organizationRepository :=
-		repository.NewOrganizationRepository(db)
+	organizationRepository := repository.NewOrganizationRepository(db)
 
-	organizationPeriodRepository :=
-		repository.NewOrganizationPeriodRepository(db)
+	organizationPeriodRepository := repository.NewOrganizationPeriodRepository(db)
 
-	userRepository :=
-		repository.NewUserRepository(db)
+	userRepository := repository.NewUserRepository(db)
 
-	rbacRepository :=
-		repository.NewRBACRepository(db)
-
-	departmentRepository := repository.NewDepartmentRepository(db)
+	memberPositionRepository := repository.NewMemberPositionRepository(db)
 
 	// =========================================================
 	// AUTH
@@ -70,72 +62,58 @@ func main() {
 		24*time.Hour,
 	)
 
+	authMiddleware := middleware.NewAuthMiddleware(
+		jwtService,
+	)
+
 	// =========================================================
 	// SERVICE
 	// =========================================================
 
-	organizationTypeService :=
-		service.NewOrganizationTypeService(
-			organizationTypeRepository,
-		)
+	organizationTypeService := service.NewOrganizationTypeService(
+		organizationTypeRepository,
+	)
 
-	organizationService :=
-		service.NewOrganizationService(
-			organizationRepository,
-		)
+	organizationService := service.NewOrganizationService(
+		organizationRepository,
+	)
 
-	organizationPeriodService :=
-		service.NewOrganizationPeriodService(
-			organizationPeriodRepository,
-		)
+	organizationPeriodService := service.NewOrganizationPeriodService(
+		organizationPeriodRepository,
+	)
 
-	authService :=
-		service.NewAuthService(
-			userRepository,
-			jwtService,
-		)
+	authService := service.NewAuthService(
+		userRepository,
+		jwtService,
+	)
 
-	departmentService := service.NewDepartmentService(departmentRepository)
+	memberPositionService := service.NewMemberPositionService(
+		memberPositionRepository,
+	)
 
 	// =========================================================
 	// HANDLER
 	// =========================================================
 
-	organizationTypeHandler :=
-		handler.NewOrganizationTypeHandler(
-			organizationTypeService,
-		)
+	organizationTypeHandler := handler.NewOrganizationTypeHandler(
+		organizationTypeService,
+	)
 
-	organizationHandler :=
-		handler.NewOrganizationHandler(
-			organizationService,
-		)
+	organizationHandler := handler.NewOrganizationHandler(
+		organizationService,
+	)
 
-	organizationPeriodHandler :=
-		handler.NewOrganizationPeriodHandler(
-			organizationPeriodService,
-		)
+	organizationPeriodHandler := handler.NewOrganizationPeriodHandler(
+		organizationPeriodService,
+	)
 
-	authHandler :=
-		handler.NewAuthHandler(
-			authService,
-		)
+	authHandler := handler.NewAuthHandler(
+		authService,
+	)
 
-	departmentHandler := handler.NewDepartmentHandler(departmentService)
-
-	// =========================================================
-	// MIDDLEWARE
-	// =========================================================
-
-	authMiddleware :=
-		middleware.NewAuthMiddleware(
-			jwtService,
-		)
-
-	rbacMiddleware :=
-		middleware.NewRBACMiddleware(
-			rbacRepository,
-		)
+	memberPositionHandler := handler.NewMemberPositionHandler(
+		memberPositionService,
+	)
 
 	// =========================================================
 	// ROUTER
@@ -145,10 +123,9 @@ func main() {
 		organizationTypeHandler,
 		organizationHandler,
 		organizationPeriodHandler,
+		memberPositionHandler,
 		authHandler,
 		authMiddleware,
-		rbacMiddleware,
-		departmentHandler,
 	)
 
 	// =========================================================

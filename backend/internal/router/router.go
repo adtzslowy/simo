@@ -11,12 +11,15 @@ func New(
 	organizationTypeHandler *handler.OrganizationTypeHandler,
 	organizationHandler *handler.OrganizationHandler,
 	organizationPeriodHandler *handler.OrganizationPeriodHandler,
+	memberPositionHandler *handler.MemberPositionHandler,
 	authHandler *handler.AuthHandler,
 	authMiddleware *middleware.AuthMiddleware,
-	rbacMiddleware *middleware.RBACMiddleware,
-	departmentHandler *handler.DepartmentHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
+
+	// =========================================================
+	// AUTH
+	// =========================================================
 
 	mux.HandleFunc(
 		"POST /api/v1/auth/login",
@@ -30,175 +33,159 @@ func New(
 		),
 	)
 
+	// =========================================================
+	// ORGANIZATION TYPES
+	// =========================================================
+
 	mux.Handle(
 		"GET /api/v1/organization-types",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization_type.read")(
-				http.HandlerFunc(organizationTypeHandler.GetAll),
-			),
+			http.HandlerFunc(organizationTypeHandler.GetAll),
+		),
+	)
+
+	mux.Handle(
+		"GET /api/v1/organization-types/{id}",
+		authMiddleware.RequireAuth(
+			http.HandlerFunc(organizationTypeHandler.GetByID),
 		),
 	)
 
 	mux.Handle(
 		"POST /api/v1/organization-types",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization_type.create")(
-				http.HandlerFunc(organizationTypeHandler.Create),
-			),
+			http.HandlerFunc(organizationTypeHandler.Create),
 		),
 	)
 
 	mux.Handle(
 		"PUT /api/v1/organization-types/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization_type.update")(
-				http.HandlerFunc(organizationTypeHandler.Update),
-			),
+			http.HandlerFunc(organizationTypeHandler.Update),
 		),
 	)
 
 	mux.Handle(
-		"DELETE /api/v1/organization-types/{id}/delete",
+		"DELETE /api/v1/organization-types/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization_type.delete")(
-				http.HandlerFunc(organizationTypeHandler.Delete),
-			),
+			http.HandlerFunc(organizationTypeHandler.Delete),
 		),
 	)
 
-	mux.Handle(
-		"POST /api/v1/organizations",
-		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization.create")(
-				http.HandlerFunc(organizationHandler.Create),
-			),
-		),
-	)
+	// =========================================================
+	// ORGANIZATIONS
+	// =========================================================
 
 	mux.Handle(
-		"PUT /api/v1/organizations/{id}",
+		"GET /api/v1/organizations",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization.update")(
-				http.HandlerFunc(organizationHandler.Update),
-			),
-		),
-	)
-
-	mux.Handle(
-		"DELETE /api/v1/organizations/{id}",
-		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization.delete")(
-				http.HandlerFunc(organizationHandler.Delete),
-			),
+			http.HandlerFunc(organizationHandler.GetAll),
 		),
 	)
 
 	mux.Handle(
 		"GET /api/v1/organizations/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("organization.read")(
-				http.HandlerFunc(organizationHandler.GetByID),
-			),
+			http.HandlerFunc(organizationHandler.GetByID),
 		),
 	)
 
 	mux.Handle(
+		"POST /api/v1/organizations",
+		authMiddleware.RequireAuth(
+			http.HandlerFunc(organizationHandler.Create),
+		),
+	)
+
+	mux.Handle(
+		"PUT /api/v1/organizations/{id}",
+		authMiddleware.RequireAuth(
+			http.HandlerFunc(organizationHandler.Update),
+		),
+	)
+
+	mux.Handle(
+		"DELETE /api/v1/organizations/{id}",
+		authMiddleware.RequireAuth(
+			http.HandlerFunc(organizationHandler.Delete),
+		),
+	)
+
+	// =========================================================
+	// ORGANIZATION PERIODS
+	// =========================================================
+
+	mux.Handle(
 		"GET /api/v1/organizations/{organization_id}/periods",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("period.read")(
-				http.HandlerFunc(organizationPeriodHandler.GetByOrganizationID),
-			),
+			http.HandlerFunc(organizationPeriodHandler.GetByOrganizationID),
 		),
 	)
 
 	mux.Handle(
 		"GET /api/v1/organizations/{organization_id}/periods/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("period.read")(
-				http.HandlerFunc(organizationPeriodHandler.GetByID),
-			),
+			http.HandlerFunc(organizationPeriodHandler.GetByID),
 		),
 	)
 
 	mux.Handle(
 		"POST /api/v1/organizations/{organization_id}/periods",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("period.create")(
-				http.HandlerFunc(organizationPeriodHandler.Create),
-			),
+			http.HandlerFunc(organizationPeriodHandler.Create),
 		),
 	)
 
 	mux.Handle(
 		"PUT /api/v1/organizations/{organization_id}/periods/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("period.update")(
-				http.HandlerFunc(organizationPeriodHandler.Update),
-			),
+			http.HandlerFunc(organizationPeriodHandler.Update),
 		),
 	)
 
 	mux.Handle(
 		"DELETE /api/v1/organizations/{organization_id}/periods/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("period.delete")(
-				http.HandlerFunc(organizationPeriodHandler.Delete),
-			),
+			http.HandlerFunc(organizationPeriodHandler.Delete),
+		),
+	)
+
+	// =========================================================
+	// MEMBER POSITION ASSIGNMENTS
+	// =========================================================
+
+	mux.Handle(
+		"GET /api/v1/organizations/{organization_id}/members/{member_id}/positions",
+		authMiddleware.RequireAuth(
+			http.HandlerFunc(memberPositionHandler.GetAll),
 		),
 	)
 
 	mux.Handle(
-		"GET /api/v1/organizations/{organization_id}/departments",
+		"GET /api/v1/organizations/{organization_id}/members/{member_id}/positions/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("department.read")(
-				http.HandlerFunc(
-					departmentHandler.GetAllByOrganizationID,
-				),
-			),
+			http.HandlerFunc(memberPositionHandler.GetByID),
 		),
 	)
 
 	mux.Handle(
-		"GET /api/v1/organizations/{organization_id}/departments/{id}",
+		"POST /api/v1/organizations/{organization_id}/members/{member_id}/positions",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("department.read")(
-				http.HandlerFunc(
-					departmentHandler.GetByID,
-				),
-			),
+			http.HandlerFunc(memberPositionHandler.Create),
 		),
 	)
 
 	mux.Handle(
-		"POST /api/v1/organizations/{organization_id}/departments",
+		"PUT /api/v1/organizations/{organization_id}/members/{member_id}/positions/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("department.create")(
-				http.HandlerFunc(
-					departmentHandler.Create,
-				),
-			),
+			http.HandlerFunc(memberPositionHandler.Update),
 		),
 	)
 
 	mux.Handle(
-		"PUT /api/v1/organizations/{organization_id}/departments/{id}",
+		"DELETE /api/v1/organizations/{organization_id}/members/{member_id}/positions/{id}",
 		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("department.update")(
-				http.HandlerFunc(
-					departmentHandler.Update,
-				),
-			),
-		),
-	)
-
-	mux.Handle(
-		"DELETE /api/v1/organizations/{organization_id}/departments/{id}",
-		authMiddleware.RequireAuth(
-			rbacMiddleware.RequirePermission("department.delete")(
-				http.HandlerFunc(
-					departmentHandler.Delete,
-				),
-			),
+			http.HandlerFunc(memberPositionHandler.Delete),
 		),
 	)
 
